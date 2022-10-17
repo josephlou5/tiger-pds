@@ -47,12 +47,16 @@ def inject_logged_in_user():
 # ==============================================================================
 
 
+def set_current_page():
+    session['current_page'] = request.path
+
+
 def login_required(func):
     """A decorator to protect an endpoint."""
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        session['current_page'] = request.path
+        set_current_page()
         if not is_logged_in():
             return redirect(url_for('log_in'))
         return func(*args, **kwargs)
@@ -97,6 +101,7 @@ def _render(template_file, **kwargs):
 
 @app.route('/', methods=['GET'])
 def index():
+    set_current_page()
     return _render('index.jinja')
 
 
@@ -131,9 +136,3 @@ def history():
 @login_required
 def profile():
     return _render('profile/profile.jinja')
-
-
-# ==============================================================================
-
-if __name__ == '__main__':
-    app.run('localhost', debug=True)
