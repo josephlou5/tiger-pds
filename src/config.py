@@ -16,22 +16,16 @@ except ImportError:
 
 
 class Config:
-    """The default config object."""
+    """The base config object."""
     DEBUG = False
     DEVELOPMENT = False
 
     SECRET_KEY = 'secret'
 
 
-# ==============================================================================
-
-
 class ProdConfig(Config):
     """The config object for production."""
     SECRET_KEY = os.environ.get('PROD_SECRET_KEY')
-
-
-# ==============================================================================
 
 
 class DevConfig(Config):
@@ -40,3 +34,12 @@ class DevConfig(Config):
     DEVELOPMENT = True
 
     SECRET_KEY = DEV_SECRET_KEY
+
+
+# ==============================================================================
+
+
+def get_config(debug=False):
+    if debug:
+        return DevConfig
+    return ProdConfig

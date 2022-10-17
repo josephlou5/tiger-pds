@@ -102,6 +102,30 @@ class CasClient:
 
 #-----------------------------------------------------------------------
 
+class DevCasClient:
+    """A CasClient implementation for development."""
+
+    def __init__(self, username):
+        self.username = username.strip()
+
+    def authenticate(self, username=None):
+        if username is None:
+            username = self.username
+        else:
+            username = username.strip()
+
+        # Store the username in the session.
+        session['username'] = username
+        return username
+
+    def logout(self, next_url):
+        # Delete the user's username from the session.
+        session.pop('username')
+        # Redirect the browser to next_url
+        abort(redirect(next_url))
+
+#-----------------------------------------------------------------------
+
 def main():
     print("CasClient does not run standalone")
 

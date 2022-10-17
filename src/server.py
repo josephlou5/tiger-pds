@@ -10,22 +10,20 @@ import functools
 from flask import (Flask, make_response, redirect, render_template, request,
                    session, url_for)
 
-import config
-from scripts.casclient import CasClient
-from scripts.dev_casclient import DevCasClient
+from config import get_config
+from scripts.casclient import CasClient, DevCasClient
 
 # ==============================================================================
 
 # Set up app
 
 app = Flask(__name__, instance_relative_config=True)
+app.config.from_object(get_config(app.debug))
 
 if app.debug:
-    app.config.from_object(config.DevConfig)
     cas_client = DevCasClient('jdlou')
 else:
-    app.config.from_object(config.ProdConfig)
-    cas_client = CasClient
+    cas_client = CasClient()
 
 # ==============================================================================
 
