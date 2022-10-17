@@ -1,0 +1,17 @@
+{% extends "shared/layout.jinja" %}
+
+{% block body %}
+<div id="index-body" class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-auto text-center">
+      <img
+        width="325"
+        height="300"
+        src="{{ url_for('static', filename='logo.png' )}}"
+        alt="{{ APP_NAME }} Logo"
+      />
+      <h2 class="mx-auto">Deliveries made easy.</h2>
+    </div>
+  </div>
+</div>
+{% endblock %}

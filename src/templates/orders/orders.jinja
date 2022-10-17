@@ -1,0 +1,25 @@
+{% extends "shared/layout.jinja" %}
+
+{% block title %}
+Orders
+{% endblock %}
+
+{% block body %}
+<div id="orders-body" class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <h2>Orders</h2>
+    </div>
+    <div class="col-auto">
+      <a class="btn btn-success" href="{{ url_for('create_order') }}">
+        Add Order
+      </a>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      You don't have any orders!
+    </div>
+  </div>
+</div>
+{% endblock %}
