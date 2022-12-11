@@ -30,7 +30,7 @@ class UserProfile(db.Model):
     # name on packages
     name = Column(String())
     # dorm room
-    address = Column(String())
+    address = Column(String(), nullable=False)
 
     def __init__(self, netid, name=None, address=None):
         self.netid = netid
