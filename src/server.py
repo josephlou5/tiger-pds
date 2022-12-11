@@ -129,7 +129,11 @@ def profile():
     if edit_profile_form.validate_on_submit():
         db.user_profile.save(netid, edit_profile_form)
 
-    return _render('profile/profile.jinja', form=edit_profile_form)
+    render_kwargs = {
+        'form': edit_profile_form,
+        'endpoint': url_for('/profile'),
+    }
+    return _render('profile/profile.jinja', **render_kwargs)
 
 
 # ==============================================================================
