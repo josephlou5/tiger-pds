@@ -1,0 +1,51 @@
+{% set left_col = 'col-sm-2' %}
+{% set right_col = 'col-sm-10' %}
+
+{% macro create_header(title, submit_button, form_id, cancel_link=none) %}
+<div class="row">
+  <h2 class="col">{{ title }}</h2>
+  <div class="col-auto">
+    {% if cancel_link is not none %}
+    <a
+      type="button"
+      class="btn btn-danger"
+      href="{{ cancel_link }}"
+    >
+      Cancel
+    </a>
+    {% endif %}
+    {{ submit_button(class='btn btn-success', form=form_id) }}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro create_element(element, show_errors=true) %}
+{{ element(**kwargs) }}
+{% if show_errors and element.errors %}
+<div class="invalid-feedback">
+  {% for error in element.errors %}
+  <div>{{ error }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if element.description %}
+<div class="form-text" id="{{ element.description_id }}">
+  {{ element.description }}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro create_field(element, right=right_col) %}
+<div class="{{ left_col }}">
+  {{ element.label(class='col-form-label') }}
+</div>
+<div class="{{ right }}">
+  {{ create_element(element, **kwargs) }}
+</div>
+{% endmacro %}
+
+{% macro create_row(element, right=right_col) %}
+<div class="row mb-3">
+  {{ create_field(element, right, **kwargs) }}
+</div>
+{% endmacro %}

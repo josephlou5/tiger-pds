@@ -1,2 +1,2 @@
-FLASK_APP=server.py
+FLASK_APP=src/server.py
 FLASK_DEBUG=True

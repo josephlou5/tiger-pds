@@ -1,16 +1,27 @@
 {% extends "shared/layout.jinja" %}
+{% import "shared/forms.jinja" as forms %}
 
 {% block title %}
 Profile
 {% endblock %}
 
 {% block body %}
-<div id="orders-body" class="container-fluid">
-  <div class="row">
-    <div class="col">
-      <h2>Profile</h2>
-    </div>
-  </div>
-  {# name on package, dorm room, other settings #}
+
+{% set form_id = 'profile-form' %}
+
+<div id="profile-body" class="container-fluid">
+  {{ forms.create_header('Profile', form.submit, form_id) }}
+
+  <form
+    id="{{ form_id }}"
+    action="{{ url_for('profile') }}"
+    method="post"
+    novalidate
+  >
+    {{ form.csrf_token }}
+
+    {{ forms.create_row(form.name) }}
+    {{ forms.create_row(form.address) }}
+  </form>
 </div>
 {% endblock %}

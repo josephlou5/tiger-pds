@@ -9,8 +9,11 @@ import functools
 
 from flask import (Flask, make_response, redirect, render_template, request,
                    session, url_for)
+from flask_wtf.csrf import CSRFProtect
 
+import db
 from config import get_config
+from forms.edit_profile_form import EditProfileForm
 from scripts.casclient import CasClient, DevCasClient
 
 # ==============================================================================
@@ -24,6 +27,13 @@ if app.debug:
     cas_client = DevCasClient('jdlou')
 else:
     cas_client = CasClient()
+
+# Set up CSRF protection
+csrf = CSRFProtect()
+csrf.init_app(app)
+
+# Set up database
+db.init_app(app)
 
 # ==============================================================================
 
@@ -108,6 +118,23 @@ def index():
 # ==============================================================================
 
 
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    netid = get_netid()
+    user_profile = db.user_profile.get(netid)
+
+    edit_profile_form = EditProfileForm(obj=user_profile)
+
+    if edit_profile_form.validate_on_submit():
+        db.user_profile.save(netid, edit_profile_form)
+
+    return _render('profile/profile.jinja', form=edit_profile_form)
+
+
+# ==============================================================================
+
+
 @app.route('/orders', methods=['GET'])
 @login_required
 def orders():
@@ -127,12 +154,3 @@ def create_order():
 @login_required
 def history():
     return _render('history/history.jinja')
-
-
-# ==============================================================================
-
-
-@app.route('/profile', methods=['GET'])
-@login_required
-def profile():
-    return _render('profile/profile.jinja')
