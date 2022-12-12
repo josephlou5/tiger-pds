@@ -18,7 +18,7 @@ Order Info
   <button id="order-pin-number-button" class="btn btn-sm btn-danger">
     Show
   </button>
-  <span id="order-pin-number" class="d-none">
+  <span id="order-pin-number-span" class="d-none">
     {{ order.pin }}
   </span>
   {% endcall %}
@@ -35,9 +35,7 @@ Order Info
 
   {{ info.create_row('Status', order.order_status) }}
 
-  {{ info.create_delete_button(
-       url_for('delete_order', order_id=order.order_id) )
-  }}
+  {{ info.create_delete_button(delete_button_id) }}
 </div>
 
 <script>
@@ -45,15 +43,9 @@ Order Info
   const ORDERS_URL = '{{ url_for("orders") }}';
 
   $(document).ready(() => {
-    // show and hide pin number
-    let showing = false;
-    const pinElement = $('#order-pin-number');
-    const button = $('#order-pin-number-button');
-    button.click((event) => {
-      pinElement.toggleClass('d-none');
-      button.html(showing ? 'Hide' : 'Show');
-      showing = !showing;
-    });
+    const pinElement = $('#order-pin-number-span');
+    const buttonElement = $('#order-pin-number-button');
+    showHidePinNumber(pinElement, buttonElement);
 
     $('#{{ delete_button_id }}').click((event) => {
       ajaxRequest('DELETE', DELETE_URL, {

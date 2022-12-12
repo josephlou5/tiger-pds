@@ -38,6 +38,9 @@
         {% if is_logged_in %}
         {{ _nav_item('orders', 'Orders') }}
         {{ _nav_item('history', 'History') }}
+        {% if does_delivery %}
+        {{ _nav_item('deliveries', 'Deliveries') }}
+        {% endif %}
         {% endif %}
       </ul>
 
@@ -62,8 +65,6 @@
                 Profile
               </a>
             </li>
-            <!-- <li><hr class="dropdown-divider"></li> -->
-            {# switch roles here #}
           </ul>
         </li>
         <li class="nav-item">

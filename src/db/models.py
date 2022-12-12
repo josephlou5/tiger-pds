@@ -7,6 +7,7 @@ The database and models.
 
 from datetime import datetime
 
+import pytz
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
@@ -17,6 +18,11 @@ __all__ = (
     'UserProfile',
     'Order',
 )
+
+# ==============================================================================
+
+UTC_TZ = pytz.utc
+EASTERN_TZ = pytz.timezone('US/Eastern')
 
 # ==============================================================================
 
@@ -34,6 +40,8 @@ class UserProfile(db.Model):
     address = Column(String(), nullable=False)
     # name on packages
     name = Column(String())
+    # whether this person can deliver packages
+    does_delivery = Column(Boolean(), default=False, nullable=False)
 
     def __init__(self, netid, address, name=None):
         self.netid = netid
@@ -89,7 +97,12 @@ class Order(db.Model):
     @property
     def order_status(self):
         if self.is_delivered:
-            return f'Delivered on {self.date_delivered}'
+            if self.date_delivered is None:
+                return 'Delivered'
+            dt_local = UTC_TZ.localize(
+                self.date_delivered).astimezone(EASTERN_TZ)
+            date_delivered_str = dt_local.strftime('%a, %b %-d, %Y, %H:%M')
+            return f'Delivered on {date_delivered_str}'
         if self.delivery_netid:
             return 'Picked up from Frist'
         return 'Waiting to be picked up from Frist'

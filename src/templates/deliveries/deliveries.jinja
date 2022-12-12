@@ -1,0 +1,142 @@
+{% extends "shared/layout.jinja" %}
+
+{% block title %}
+Deliveries
+{% endblock %}
+
+{% block body %}
+<div id="deliveries-body" class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <h2>In Progress</h2>
+    </div>
+  </div>
+  {% if delivering|length == 0 %}
+  <div>You have no deliveries in progress.</div>
+  {% else %}
+  <table id="delivering-table" class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th class="table-small-column"></th>
+        <th>Locker Kiosk</th>
+        <th>PIN</th>
+        <th>Name on Package</th>
+        <th>Deliver To</th>
+        <th class="table-small-column"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in delivering %}
+      <tr>
+        <th class="table-small-column">{{ loop.index0 + 1 }}</th>
+        <td>{{ order.kiosk }}</td>
+        <td>
+          <button
+            index="{{ loop.index0 }}"
+            class="btn btn-sm btn-danger order-pin-number-button"
+          >
+            Show
+          </button>
+          <span
+            index="{{ loop.index0 }}"
+            class="d-none order-pin-number-span"
+          >
+            {{ order.pin }}
+          </span>
+        </td>
+        <td>
+          {% if order.name %}
+          {{ order.name }}
+          {% else %}
+          <span class="text-muted fst-italic">No name given</span>
+          {% endif %}
+        </td>
+        <td>{{ order.address }}</td>
+        <td class="table-small-column">
+          <button
+            class="btn btn-sm btn-success"
+            onclick="orderDelivered({{ order.order_id }});"
+          >
+            Delivered
+          </button>
+          <button
+            class="btn btn-sm btn-danger"
+            onclick="unclaimOrder({{ order.order_id }});"
+          >
+            Unclaim
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <br />
+
+  <div class="row">
+    <div class="col">
+      <h2>Deliveries</h2>
+    </div>
+  </div>
+  {% if orders|length == 0 %}
+  <div>There are no orders needing delivery.</div>
+  {% else %}
+  <table id="orders-table" class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th class="table-small-column"></th>
+        <th>Locker Kiosk</th>
+        <th>Deliver To</th>
+        <th class="table-small-column"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <th class="table-small-column">{{ loop.index0 + 1 }}</th>
+        <td>{{ order.kiosk }}</td>
+        <td>{{ order.address }}</td>
+        <td class="table-small-column">
+          <button
+            class="btn btn-sm btn-success"
+            onclick="claimOrder({{ order.order_id }});"
+          >
+            Claim
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+<script>
+  const CLAIM_URL = '{{ url_for("claim_order", order_id=0)[:-1] }}';
+  const DELIVERED_URL = '{{ url_for("order_delivered", order_id=0)[:-1] }}';
+
+  function claimOrder(orderId) {
+    ajaxRequest('POST', CLAIM_URL + orderId);
+  }
+
+  function unclaimOrder(orderId) {
+    ajaxRequest('DELETE', CLAIM_URL + orderId);
+  }
+
+  function orderDelivered(orderId) {
+    ajaxRequest('POST', DELIVERED_URL + orderId);
+  }
+
+  $(document).ready(() => {
+    $('.order-pin-number-button').each(function () {
+      const buttonElement = $(this);
+      const index = buttonElement.attr('index');
+      const pinElement = $(`span.order-pin-number-span[index=${index}]`);
+      // if can't find the pin element, don't do anything
+      if (pinElement.length === 0) return;
+      showHidePinNumber(pinElement, buttonElement);
+    });
+  });
+</script>
+{% endblock %}

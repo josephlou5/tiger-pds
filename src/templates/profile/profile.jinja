@@ -23,5 +23,14 @@ Profile
     {{ forms.create_row(form.address) }}
     {{ forms.create_row(form.name) }}
   </form>
+
+  {% if profile.does_delivery %}
+  <br />
+  <div class="row">
+    <div class="col">
+      You are able to make deliveries.
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

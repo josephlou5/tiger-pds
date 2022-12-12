@@ -5,8 +5,11 @@ Helper methods for the Orders table.
 
 # ==============================================================================
 
+from datetime import datetime
+
 from werkzeug.exceptions import Forbidden, NotFound
 
+import db.user_profile as user_profile
 from db._shared import extract_form_data, query
 from db.models import Order, db
 
@@ -38,6 +41,27 @@ def get_all(netid):
 def get_history(netid):
     """Returns all the delivered orders for the given netid."""
     return [o for o in _get_all(netid) if o.is_delivered]
+
+
+def get_delivering(netid):
+    """Returns all the orders the given netid is currently delivering.
+    """
+    user_profile.check_does_delivery(netid)
+    filters = {
+        'is_delivered': False,
+        'delivery_netid': netid,
+    }
+    return query(Order).filter_by(**filters).all()
+
+
+def get_needs_delivery(netid):
+    """Returns all the orders needing delivery."""
+    user_profile.check_does_delivery(netid)
+    filters = {
+        'is_delivered': False,
+        'delivery_netid': None,
+    }
+    return query(Order).filter_by(**filters).all()
 
 
 def _check_existing_order(netid, form, args, order_id=None):
@@ -123,5 +147,38 @@ def delete(netid, order_id):
     """
     order = get(order_id, netid, action='delete')
     db.session.delete(order)
+    db.session.commit()
+    return True
+
+
+def claim(netid, order_id):
+    """Assigns the given netid to be the deliverer for the given order.
+    Assumes the order is valid to be assigned to someone.
+    Returns True if successful.
+    """
+    user_profile.check_does_delivery(netid)
+    order = get(order_id)
+    order.delivery_netid = netid
+    db.session.commit()
+    return True
+
+
+def unclaim(order_id):
+    """Unassigns the deliverer for the given order.
+    Returns True if successful.
+    """
+    order = get(order_id)
+    order.delivery_netid = None
+    db.session.commit()
+    return True
+
+
+def mark_delivered(order_id):
+    """Marks the given order as delivered.
+    Returns True if successful.
+    """
+    order = get(order_id)
+    order.is_delivered = True
+    order.date_delivered = datetime.utcnow()
     db.session.commit()
     return True
