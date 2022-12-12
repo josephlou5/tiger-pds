@@ -72,7 +72,7 @@ class Order(db.Model):
                           default=datetime.utcnow,
                           nullable=False)
 
-    def __init__(self, netid, alias, kiosk, pin, address, name=None):
+    def __init__(self, netid, kiosk, pin, address, alias=None, name=None):
         self.netid = netid
         self.alias = alias
         self.kiosk = kiosk

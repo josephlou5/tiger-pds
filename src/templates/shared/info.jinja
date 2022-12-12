@@ -31,12 +31,12 @@
 {% endcall %}
 {% endmacro %}
 
-{% macro create_delete_button(url) %}
+{% macro create_delete_button(button_id) %}
 <div class="row justify-content-end">
   <div class="col-auto">
-    <a type="button" class="btn btn-danger" href="{{ url }}">
+    <button type="button" id="{{ button_id }}" class="btn btn-danger">
       Delete
-    </a>
+    </button>
   </div>
 </div>
 {% endmacro %}

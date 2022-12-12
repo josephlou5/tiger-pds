@@ -17,12 +17,27 @@
       integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
       crossorigin="anonymous"
     />
+
     <!-- JQuery -->
     <script
       src="https://code.jquery.com/jquery-3.6.0.min.js"
       integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
       crossorigin="anonymous"
     ></script>
+    <script type="text/javascript">
+      // Set up CSRF for jQuery requests
+      const csrf_token = '{{ csrf_token() }}';
+      $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+          if (
+            !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) &&
+            !this.crossDomain
+          ) {
+            xhr.setRequestHeader('X-CSRFToken', csrf_token);
+          }
+        },
+      });
+    </script>
 
     <!-- Bootstrap JS and Popper -->
     <script
@@ -35,6 +50,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
+    <script src="{{ url_for('static', filename='shared.js') }}"></script>
 
     <title>      
       {% block title %}{% endblock %}

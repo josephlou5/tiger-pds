@@ -29,8 +29,7 @@ else:
     cas_client = CasClient()
 
 # Set up CSRF protection
-csrf = CSRFProtect()
-csrf.init_app(app)
+CSRFProtect().init_app(app)
 
 # Set up database
 db.init_app(app)
@@ -214,12 +213,20 @@ def create_order():
     return _render('orders/edit_order_form.jinja', **render_kwargs)
 
 
-@app.route('/orders/edit/<int:order_id>', methods=['GET', 'POST'])
+@app.route('/orders/edit/<int:order_id>', methods=['GET', 'POST', 'DELETE'])
 @login_required
 def edit_order(order_id):
     netid = get_netid()
 
+    if request.method == 'DELETE':
+        db.order.delete(netid, order_id)
+        return redirect(url_for('orders'))
+
     order = db.order.get(order_id, netid, action='edit')
+
+    if order.is_delivered:
+        return redirect(url_for('view_order', order_id=order_id))
+
     edit_order_form = forms.EditOrderForm(obj=order)
 
     if edit_order_form.data['delete']:
@@ -240,15 +247,6 @@ def edit_order(order_id):
         'profile': {key: '' for key in ('address', 'name')},
     }
     return _render('orders/edit_order_form.jinja', **render_kwargs)
-
-
-# i'm not able to make POST or DELETE requests work with AJAX, so using
-# an ugly GET method
-@app.route('/orders/delete/<int:order_id>', methods=['GET'])
-@login_required
-def delete_order(order_id):
-    db.order.delete(get_netid(), order_id)
-    return redirect(url_for('orders'))
 
 
 # ==============================================================================

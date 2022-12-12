@@ -6,6 +6,9 @@ Order Info
 {% endblock %}
 
 {% block body %}
+
+{% set delete_button_id = 'delete-order-button' %}
+
 <div id="order-info-body" class="container-fluid">
   {{ info.create_header('Your Order', edit_link) }}
 
@@ -38,7 +41,10 @@ Order Info
 </div>
 
 <script>
-  $(document).ready(function () {
+  const DELETE_URL = '{{ url_for("edit_order", order_id=order.order_id) }}';
+  const ORDERS_URL = '{{ url_for("orders") }}';
+
+  $(document).ready(() => {
     // show and hide pin number
     let showing = false;
     const pinElement = $('#order-pin-number');
@@ -47,6 +53,14 @@ Order Info
       pinElement.toggleClass('d-none');
       button.html(showing ? 'Hide' : 'Show');
       showing = !showing;
+    });
+
+    $('#{{ delete_button_id }}').click((event) => {
+      ajaxRequest('DELETE', DELETE_URL, {
+        success: () => {
+          location.assign(ORDERS_URL);
+        },
+      });
     });
   });
 </script>
