@@ -106,13 +106,25 @@ def _render(template_file, **kwargs):
     return response
 
 
+# ==============================================================================
+
+
 def error_view(title, message):
     return _render('error.jinja', title=title, message=message)
 
 
-def unauthorized_access():
-    return error_view('Unauthorized access',
-                      'You do not have permission to view this page.')
+@app.errorhandler(404)
+@app.errorhandler(405)  # if method is not allowed, also use not found
+def error_not_found(e):
+    description = e.description
+    if e.code == 405:
+        description = ''
+    return error_view('404 Not Found', description)
+
+
+@app.errorhandler(403)
+def error_forbidden(e):
+    return error_view('Access denied', e.description)
 
 
 # ==============================================================================
@@ -155,23 +167,19 @@ def orders():
     return _render('orders/orders.jinja', orders=all_orders)
 
 
-def _get_order(order_id):
-    order = db.order.get(order_id)
-    if order is None:
-        return None, lambda: error_view('Unknown order',
-                                        'This order does not exist.')
-    if order.netid != get_netid():
-        return None, unauthorized_access
-    return order, None
-
-
 @app.route('/orders/<int:order_id>', methods=['GET'])
 @login_required
 def view_order(order_id):
-    order, error = _get_order(order_id)
-    if error is not None:
-        return error()
-    return _render('orders/order_info.jinja', order=order)
+    order = db.order.get(order_id, get_netid())
+    render_kwargs = {
+        'order': order,
+    }
+    if order.is_delivered:
+        # do not allow edit anymore
+        render_kwargs['edit_link'] = None
+    else:
+        render_kwargs['edit_link'] = url_for('edit_order', order_id=order_id)
+    return _render('orders/order_info.jinja', **render_kwargs)
 
 
 @app.route('/orders/new', methods=['GET', 'POST'])
@@ -209,10 +217,9 @@ def create_order():
 @app.route('/orders/edit/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def edit_order(order_id):
-    order, error = _get_order(order_id)
-    if error is not None:
-        return error()
+    netid = get_netid()
 
+    order = db.order.get(order_id, netid, action='edit')
     edit_order_form = forms.EditOrderForm(obj=order)
 
     if edit_order_form.data['delete']:
@@ -221,7 +228,7 @@ def edit_order(order_id):
             return redirect(url_for('orders'))
 
     if edit_order_form.validate_on_submit():
-        success = db.order.update(get_netid(), order_id, edit_order_form)
+        success = db.order.update(netid, order_id, edit_order_form)
         if success:
             return redirect(url_for('orders'))
 
@@ -229,10 +236,19 @@ def edit_order(order_id):
         'creating': False,
         'form': edit_order_form,
         'endpoint': url_for('edit_order', order_id=order_id),
-        'cancel_link': url_for('orders'),
+        'cancel_link': url_for('view_order', order_id=order_id),
         'profile': {key: '' for key in ('address', 'name')},
     }
     return _render('orders/edit_order_form.jinja', **render_kwargs)
+
+
+# i'm not able to make POST or DELETE requests work with AJAX, so using
+# an ugly GET method
+@app.route('/orders/delete/<int:order_id>', methods=['GET'])
+@login_required
+def delete_order(order_id):
+    db.order.delete(get_netid(), order_id)
+    return redirect(url_for('orders'))
 
 
 # ==============================================================================

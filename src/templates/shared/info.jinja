@@ -1,16 +1,15 @@
 {% set left_col = 'col-sm-2' %}
 
-{% macro create_header(title, edit_link) %}
+{% macro create_header(title, edit_link=none) %}
 <div class="row">
   <h2 class="col">{{ title }}</h2>
+  {% if edit_link %}
   <div class="col-auto">
-    <a
-      class="btn btn-success"
-      href="{{ edit_link }}"
-    >
+    <a type="button" class="btn btn-success" href="{{ edit_link }}">
       Edit
     </a>
   </div>
+  {% endif %}
 </div>
 {% endmacro %}
 
@@ -30,4 +29,14 @@
 {% call call_row(label) %}
 {{ value }}
 {% endcall %}
+{% endmacro %}
+
+{% macro create_delete_button(url) %}
+<div class="row justify-content-end">
+  <div class="col-auto">
+    <a type="button" class="btn btn-danger" href="{{ url }}">
+      Delete
+    </a>
+  </div>
+</div>
 {% endmacro %}

@@ -5,16 +5,25 @@ Helper methods for the Orders table.
 
 # ==============================================================================
 
+from werkzeug.exceptions import Forbidden, NotFound
+
 from db._shared import extract_form_data, query
 from db.models import Order, db
 
 # ==============================================================================
 
 
-def get(order_id):
-    """Returns the order with the given id, or None if it doesn't exist.
+def get(order_id, netid=None, action='view'):
+    """Returns the order with the given id.
+    If the netid is given, also make sure the user has permission to
+    retrieve this order.
     """
-    return query(Order).filter_by(order_id=order_id).first()
+    order = query(Order).filter_by(order_id=order_id).first()
+    if order is None:
+        raise NotFound(f'Order {order_id} could not be found.')
+    if netid is not None and netid != order.netid:
+        raise Forbidden(f'You do not have permission to {action} this order.')
+    return order
 
 
 def _get_all(netid):
@@ -57,7 +66,6 @@ def create(netid, user_profile, form):
     REQUIRED_ARGS = ['kiosk', 'pin']
     OPTIONAL_ARGS = ['alias', 'address', 'name']
     args = extract_form_data(form, REQUIRED_ARGS, OPTIONAL_ARGS)
-    print(args)
 
     if user_profile is None:
         if 'address' not in args:
@@ -95,7 +103,7 @@ def update(netid, order_id, form):
     if existing:
         return False
 
-    order = get(order_id)
+    order = get(order_id, netid, action='edit')
     changed = False
     for key, value in args.items():
         if getattr(order, key) == value:
@@ -109,13 +117,11 @@ def update(netid, order_id, form):
     return True
 
 
-def delete(order_id):
+def delete(netid, order_id):
     """Deletes the given order.
     Returns True if successful.
     """
-    order = get(order_id)
-    if order is None:
-        return False
+    order = get(order_id, netid, action='delete')
     db.session.delete(order)
     db.session.commit()
     return True
