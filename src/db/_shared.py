@@ -20,7 +20,7 @@ def extract_form_data(form, required=None, optional=None):
     for key in required:
         args[key] = form.data[key]
     for key in optional:
-        if key not in form.data:
+        if not form.data[key]:
             continue
         args[key] = form.data[key]
     return args

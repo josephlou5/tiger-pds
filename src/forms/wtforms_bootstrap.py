@@ -2,11 +2,12 @@
 Adds Bootstrap form styling and validation to field renders.
 """
 
-from wtforms.fields import StringField, SubmitField
+from wtforms.fields import RadioField, StringField, SubmitField
 
 # ==============================================================================
 
 __all__ = (
+    'RadioField',
     'StringField',
     'SubmitField',
 )
@@ -56,4 +57,6 @@ def _add_widget(field_cls, attrs=None, widget=None):
 
 # ==============================================================================
 
+# take care of bootstrap styling in template
+RadioField = _add_widget(RadioField)
 StringField = _add_widget(StringField, {'class': 'form-control'})

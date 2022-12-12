@@ -1,0 +1,58 @@
+{% extends "shared/layout.jinja" %}
+{% import "shared/info.jinja" as info %}
+
+{% block title %}
+Order Info
+{% endblock %}
+
+{% block body %}
+<div id="order-info-body" class="container-fluid">
+  {{ info.create_header('Your Order',
+                        url_for('edit_order', order_id=order.order_id))
+  }}
+
+  {{ info.create_row('Package Name', order.order_title) }}
+  {{ info.create_row('Locker Kiosk', order.kiosk) }}
+  {% call info.call_row('PIN Number') %}
+  <button id="order-pin-number-button" class="btn btn-sm btn-danger">
+    Show
+  </button>
+  <span id="order-pin-number" class="d-none">
+    {{ order.pin }}
+  </span>
+  {% endcall %}
+
+  {{ info.create_row('Deliver to', order.address) }}
+
+  {% call info.call_row('Name on package') %}
+  {% if order.name %}
+  {{ order.name }}
+  {% else %}
+  <span class="text-muted fst-italic">No name given</span>
+  {% endif %}
+  {% endcall %}
+
+  {{ info.create_row('Status', order.order_status) }}
+</div>
+
+<script>
+  window.onload = () => {
+    let showing = false;
+
+    const pinElement = document.getElementById('order-pin-number');
+    const button = document.getElementById('order-pin-number-button');
+
+    button.onclick = (event) => {
+      if (showing) {
+        showing = false;
+        pinElement.classList.add('d-none');
+        button.innerHTML = 'Show';
+      } else {
+        showing = true;
+        pinElement.classList.remove('d-none');
+        button.innerHTML = 'Hide';
+      }
+    };
+  };
+</script>
+{% endblock %}

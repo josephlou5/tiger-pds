@@ -1,0 +1,66 @@
+{% extends "shared/layout.jinja" %}
+{% import "shared/forms.jinja" as forms %}
+
+{% set title = 'New Order' if creating else 'Edit Order' %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block body %}
+
+{% set form_id = 'create-order-form' if creating else 'edit-order-form' %}
+
+<div id="edit-orders-body" class="container-fluid">
+  {{ forms.create_header(title, form.submit, form_id, cancel_link) }}
+
+  <form
+    id="{{ form_id }}"
+    action="{{ endpoint }}"
+    method="post"
+    novalidate
+  >
+    {{ form.csrf_token }}
+
+    {{ forms.create_row(form.alias,
+                        placeholder='E.g., Snacks for midterms week')
+    }}
+  
+    {# kiosk requires manual work for 4 radio button groups #}
+    {% call forms.call_row(form.kiosk.label) %}
+    {% for group in form.kiosk_groups(4) %}
+    <div class="d-block mb-1">
+      <div class="btn-group" role="group">
+        {% for choice in group %}
+        {{ choice(class='btn-check') }}
+        {{ choice.label(class='btn btn-outline-primary') }}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    {% if form.kiosk.errors %}
+    <div>
+      <input type="hidden" class="form-control is-invalid" />
+      <div class="invalid-feedback">
+        {% for error in form.kiosk.errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {{ forms.create_element_bottom(form.kiosk, show_errors=false) }}
+    {% endcall %}
+
+    {{ forms.create_row(form.pin, placeholder='XXXXXX') }}
+
+    <br />
+
+    {{ forms.create_row(form.address, placeholder=profile['address']) }}
+    {{ forms.create_row(form.name, placeholder=profile['name']) }}
+
+    {% if not creating and form.delete %}
+    {{ forms.create_delete_button(form.delete, form_id) }}
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

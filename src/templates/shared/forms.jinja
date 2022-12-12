@@ -19,8 +19,13 @@
 </div>
 {% endmacro %}
 
-{% macro create_element(element, show_errors=true) %}
-{{ element(**kwargs) }}
+{% macro create_label(label) %}
+<div class="{{ left_col }}">
+  {{ label(class='col-form-label') }}
+</div>
+{% endmacro %}
+
+{% macro create_element_bottom(element, show_errors=true) %}
 {% if show_errors and element.errors %}
 <div class="invalid-feedback">
   {% for error in element.errors %}
@@ -35,10 +40,13 @@
 {% endif %}
 {% endmacro %}
 
+{% macro create_element(element, show_errors=true) %}
+{{ element(**kwargs) }}
+{{ create_element_bottom(element, show_errors) }}
+{% endmacro %}
+
 {% macro create_field(element, right=right_col) %}
-<div class="{{ left_col }}">
-  {{ element.label(class='col-form-label') }}
-</div>
+{{ create_label(element.label) }}
 <div class="{{ right }}">
   {{ create_element(element, **kwargs) }}
 </div>
@@ -47,5 +55,23 @@
 {% macro create_row(element, right=right_col) %}
 <div class="row mb-3">
   {{ create_field(element, right, **kwargs) }}
+</div>
+{% endmacro %}
+
+{# create custom row with `call` #}
+{% macro call_row(label, right=right_col) %}
+<div class="row mb-3">
+  {{ create_label(label) }}
+  <div class="{{ right }}">
+    {{ caller() }}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro create_delete_button(delete_button, form_id) %}
+<div class="row justify-content-end">
+  <div class="col-auto">
+    {{ delete_button(class="btn btn-danger", form=form_id) }}
+  </div>
 </div>
 {% endmacro %}

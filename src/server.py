@@ -12,8 +12,8 @@ from flask import (Flask, make_response, redirect, render_template, request,
 from flask_wtf.csrf import CSRFProtect
 
 import db
+import forms
 from config import get_config
-from forms.edit_profile_form import EditProfileForm
 from scripts.casclient import CasClient, DevCasClient
 
 # ==============================================================================
@@ -106,6 +106,15 @@ def _render(template_file, **kwargs):
     return response
 
 
+def error_view(title, message):
+    return _render('error.jinja', title=title, message=message)
+
+
+def unauthorized_access():
+    return error_view('Unauthorized access',
+                      'You do not have permission to view this page.')
+
+
 # ==============================================================================
 
 
@@ -124,7 +133,7 @@ def profile():
     netid = get_netid()
     user_profile = db.user_profile.get(netid)
 
-    edit_profile_form = EditProfileForm(obj=user_profile)
+    edit_profile_form = forms.EditProfileForm(obj=user_profile)
 
     if edit_profile_form.validate_on_submit():
         db.user_profile.save(netid, edit_profile_form)
@@ -142,13 +151,88 @@ def profile():
 @app.route('/orders', methods=['GET'])
 @login_required
 def orders():
-    return _render('orders/orders.jinja')
+    all_orders = db.order.get_all(get_netid())
+    return _render('orders/orders.jinja', orders=all_orders)
 
 
-@app.route('/orders/new', methods=['GET'])
+def _get_order(order_id):
+    order = db.order.get(order_id)
+    if order is None:
+        return None, lambda: error_view('Unknown order',
+                                        'This order does not exist.')
+    if order.netid != get_netid():
+        return None, unauthorized_access
+    return order, None
+
+
+@app.route('/orders/<int:order_id>', methods=['GET'])
+@login_required
+def view_order(order_id):
+    order, error = _get_order(order_id)
+    if error is not None:
+        return error()
+    return _render('orders/order_info.jinja', order=order)
+
+
+@app.route('/orders/new', methods=['GET', 'POST'])
 @login_required
 def create_order():
-    return _render('orders/create_order_form.jinja')
+    netid = get_netid()
+
+    user_profile = db.user_profile.get(netid)
+    create_order_form = forms.EditOrderForm(obj=None)
+    del create_order_form.delete
+
+    if create_order_form.validate_on_submit():
+        success = db.order.create(netid, user_profile, create_order_form)
+        if success:
+            return redirect(url_for('orders'))
+
+    profile_placeholders = {}
+    if user_profile is None:
+        for key in ('address', 'name'):
+            profile_placeholders[key] = ''
+    else:
+        for key in ('address', 'name'):
+            profile_placeholders[key] = getattr(user_profile, key, '')
+
+    render_kwargs = {
+        'creating': True,
+        'form': create_order_form,
+        'endpoint': url_for('create_order'),
+        'cancel_link': url_for('orders'),
+        'profile': profile_placeholders,
+    }
+    return _render('orders/edit_order_form.jinja', **render_kwargs)
+
+
+@app.route('/orders/edit/<int:order_id>', methods=['GET', 'POST'])
+@login_required
+def edit_order(order_id):
+    order, error = _get_order(order_id)
+    if error is not None:
+        return error()
+
+    edit_order_form = forms.EditOrderForm(obj=order)
+
+    if edit_order_form.data['delete']:
+        success = db.order.delete(order_id)
+        if success:
+            return redirect(url_for('orders'))
+
+    if edit_order_form.validate_on_submit():
+        success = db.order.update(get_netid(), order_id, edit_order_form)
+        if success:
+            return redirect(url_for('orders'))
+
+    render_kwargs = {
+        'creating': False,
+        'form': edit_order_form,
+        'endpoint': url_for('edit_order', order_id=order_id),
+        'cancel_link': url_for('orders'),
+        'profile': {key: '' for key in ('address', 'name')},
+    }
+    return _render('orders/edit_order_form.jinja', **render_kwargs)
 
 
 # ==============================================================================

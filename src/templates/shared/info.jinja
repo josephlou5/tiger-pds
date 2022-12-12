@@ -1,0 +1,33 @@
+{% set left_col = 'col-sm-2' %}
+
+{% macro create_header(title, edit_link) %}
+<div class="row">
+  <h2 class="col">{{ title }}</h2>
+  <div class="col-auto">
+    <a
+      class="btn btn-success"
+      href="{{ edit_link }}"
+    >
+      Edit
+    </a>
+  </div>
+</div>
+{% endmacro %}
+
+{# create custom row with `call` #}
+{% macro call_row(label) %}
+<div class="row mb-2">
+  <div class="{{ left_col }} info-label">
+    {{ label }}
+  </div>
+  <div class="col">
+    {{ caller() }}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro create_row(label, value) %}
+{% call call_row(label) %}
+{{ value }}
+{% endcall %}
+{% endmacro %}
