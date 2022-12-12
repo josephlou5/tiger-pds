@@ -131,7 +131,7 @@ def profile():
 
     render_kwargs = {
         'form': edit_profile_form,
-        'endpoint': url_for('/profile'),
+        'endpoint': url_for('profile'),
     }
     return _render('profile/profile.jinja', **render_kwargs)
 

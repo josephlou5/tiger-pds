@@ -27,12 +27,12 @@ class UserProfile(db.Model):
     __tablename__ = 'UserProfiles'
 
     netid = Column(String(), primary_key=True)
-    # name on packages
-    name = Column(String())
     # dorm room
     address = Column(String(), nullable=False)
+    # name on packages
+    name = Column(String())
 
-    def __init__(self, netid, name=None, address=None):
+    def __init__(self, netid, address, name=None):
         self.netid = netid
-        self.name = name
         self.address = address
+        self.name = name

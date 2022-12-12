@@ -5,6 +5,7 @@ Helper methods for the UserProfiles table.
 
 # ==============================================================================
 
+from db._shared import extract_form_data, query
 from db.models import UserProfile, db
 
 # ==============================================================================
@@ -14,8 +15,7 @@ def get(netid):
     """Returns the profile for the given netid, or None if it doesn't
     exist.
     """
-    return db.session.query(UserProfile).filter(
-        UserProfile.netid == netid).first()
+    return query(UserProfile).filter_by(netid=netid).first()
 
 
 def save(netid, form):
@@ -23,12 +23,9 @@ def save(netid, form):
     from the given FlaskForm.
     Returns True if successful.
     """
-
-    args = {}
-    for key in ('name', 'address'):
-        if key not in form.data:
-            continue
-        args[key] = form.data[key]
+    REQUIRED_ARGS = ['address']
+    OPTIONAL_ARGS = ['name']
+    args = extract_form_data(form, REQUIRED_ARGS, OPTIONAL_ARGS)
 
     profile = get(netid)
     if profile is None:
