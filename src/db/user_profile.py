@@ -11,8 +11,8 @@ from db.models import UserProfile, db
 
 
 def get(netid):
-    """Returns the UserProfile for the given netid, or None if it
-    doesn't exist.
+    """Returns the profile for the given netid, or None if it doesn't
+    exist.
     """
     return db.session.query(UserProfile).filter(
         UserProfile.netid == netid).first()
