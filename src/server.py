@@ -183,8 +183,12 @@ def profile():
 @app.route('/orders', methods=['GET'])
 @login_required
 def orders():
-    all_orders = db.order.get_all(get_netid())
-    return _render('orders/orders.jinja', orders=all_orders)
+    pending_orders, history = db.order.get_all(get_netid())
+    render_kwargs = {
+        'pending': pending_orders,
+        'history': history,
+    }
+    return _render('orders/orders.jinja', **render_kwargs)
 
 
 @app.route('/orders/<int:order_id>', methods=['GET'])
@@ -268,16 +272,6 @@ def edit_order(order_id):
         'profile': {key: '' for key in ('address', 'name')},
     }
     return _render('orders/edit_order_form.jinja', **render_kwargs)
-
-
-# ==============================================================================
-
-
-@app.route('/history', methods=['GET'])
-@login_required
-def history():
-    orders = db.order.get_history(get_netid())
-    return _render('history/history.jinja', orders=orders)
 
 
 # ==============================================================================

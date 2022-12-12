@@ -29,18 +29,19 @@ def get(order_id, netid=None, action='view'):
     return order
 
 
-def _get_all(netid):
-    return query(Order).filter_by(netid=netid).all()
-
-
 def get_all(netid):
-    """Returns all the pending orders for the given netid."""
-    return [o for o in _get_all(netid) if not o.is_delivered]
-
-
-def get_history(netid):
-    """Returns all the delivered orders for the given netid."""
-    return [o for o in _get_all(netid) if o.is_delivered]
+    """Returns all the pending orders and previous orders for the given
+    netid.
+    """
+    orders = query(Order).filter_by(netid=netid).all()
+    pending = []
+    history = []
+    for order in orders:
+        if order.is_delivered:
+            history.append(order)
+        else:
+            pending.append(order)
+    return pending, history
 
 
 def get_delivering(netid):
