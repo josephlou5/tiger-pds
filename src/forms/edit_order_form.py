@@ -18,11 +18,11 @@ ALIAS_DESCRIPTION = (
 KIOSK_DESCRIPTION = ('The locker kiosk that your package is in.')
 PIN_DESCRIPTION = ('The 6-digit PIN number to unlock the locker.')
 NAME_DESCRIPTION = (
-    'The name on this package, if it is different from the global '
-    'value. Used to confirm the package is for you.')
+    'The name on this package, if it is different from the name on '
+    'your profile. Used to confirm the package is for you.')
 ADDRESS_DESCRIPTION = (
     'The room to deliver this packages to, if it is different from the '
-    'global value.')
+    'room on your profile.')
 
 # ==============================================================================
 
