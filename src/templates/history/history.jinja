@@ -5,16 +5,22 @@ History
 {% endblock %}
 
 {% block body %}
-<div id="orders-body" class="container-fluid">
+<div id="history-body" class="container-fluid">
   <div class="row">
     <div class="col">
       <h2>History</h2>
     </div>
   </div>
+  {% if orders|length == 0 %}
   <div class="row">
     <div class="col">
       Your order history is empty.
     </div>
   </div>
+  {% else %}
+  {% with show_status = false, allow_edit = false %}
+    {% include "orders/orders_table.jinja" %}
+  {% endwith %}
+  {% endif %}
 </div>
 {% endblock %}
