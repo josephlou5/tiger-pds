@@ -9,7 +9,7 @@ from datetime import datetime
 
 from werkzeug.exceptions import Forbidden, NotFound
 
-import db.user_profile as user_profile
+from db import deliverer
 from db._shared import extract_form_data, query
 from db.models import Order, db
 
@@ -47,7 +47,7 @@ def get_all(netid):
 def get_delivering(netid):
     """Returns all the orders the given netid is currently delivering.
     """
-    user_profile.check_does_delivery(netid)
+    deliverer.check(netid)
     filters = {
         'is_delivered': False,
         'delivery_netid': netid,
@@ -57,7 +57,7 @@ def get_delivering(netid):
 
 def get_needs_delivery(netid):
     """Returns all the orders needing delivery."""
-    user_profile.check_does_delivery(netid)
+    deliverer.check(netid)
     filters = {
         'is_delivered': False,
         'delivery_netid': None,
@@ -84,7 +84,7 @@ def _check_existing_order(netid, form, args, order_id=None):
     return False
 
 
-def create(netid, user_profile, form):
+def create(netid, profile, form):
     """Creates an order with the data from the given FlaskForm.
     Returns True if successful.
     """
@@ -92,7 +92,7 @@ def create(netid, user_profile, form):
     OPTIONAL_ARGS = ['alias', 'address', 'name']
     args = extract_form_data(form, REQUIRED_ARGS, OPTIONAL_ARGS)
 
-    if user_profile is None:
+    if profile is None:
         if 'address' not in args:
             form.address.errors.append('No dorm room given in profile.')
             return False
@@ -101,7 +101,7 @@ def create(netid, user_profile, form):
         for key in ('address', 'name'):
             if key in args:
                 continue
-            args[key] = getattr(user_profile, key)
+            args[key] = getattr(profile, key)
 
     # check if a pending order is the same as this one
     existing = _check_existing_order(netid, form, args)
@@ -157,7 +157,7 @@ def claim(netid, order_id):
     Assumes the order is valid to be assigned to someone.
     Returns True if successful.
     """
-    user_profile.check_does_delivery(netid)
+    deliverer.check(netid)
     order = get(order_id)
     order.delivery_netid = netid
     db.session.commit()

@@ -24,7 +24,7 @@ Profile
     {{ forms.create_row(form.name) }}
   </form>
 
-  {% if profile.does_delivery %}
+  {% if is_deliverer %}
   <br />
   <div class="row">
     <div class="col">

@@ -10,6 +10,7 @@ import functools
 from flask import (Flask, make_response, redirect, render_template, request,
                    session, url_for)
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.exceptions import NotFound
 
 import db
 import forms
@@ -47,15 +48,13 @@ def is_logged_in():
 
 @app.context_processor
 def inject_logged_in_user():
-    does_delivery = False
+    is_deliverer = False
     if is_logged_in():
-        user_profile = db.user_profile.get(get_netid())
-        if user_profile is not None:
-            does_delivery = user_profile.does_delivery
+        is_deliverer = db.deliverer.is_deliverer(get_netid())
     return {
         'is_logged_in': is_logged_in(),
         'netid': get_netid(),
-        'does_delivery': does_delivery,
+        'is_deliverer': is_deliverer,
     }
 
 
@@ -79,7 +78,7 @@ def login_required(func):
     return wrapper
 
 
-def does_delivery_required(func):
+def is_deliverer_required(func):
     """A decorator to protect an endpoint with users who are authorized
     to make deliveries.
     """
@@ -87,7 +86,7 @@ def does_delivery_required(func):
     @functools.wraps(func)
     @login_required
     def wrapper(*args, **kwargs):
-        db.user_profile.check_does_delivery(get_netid())
+        db.deliverer.check(get_netid())
         return func(*args, **kwargs)
 
     return wrapper
@@ -135,10 +134,9 @@ def error_view(title, message):
 @app.errorhandler(404)
 @app.errorhandler(405)  # if method is not allowed, also use not found
 def error_not_found(e):
-    description = e.description
     if e.code == 405:
-        description = ''
-    return error_view('404 Not Found', description)
+        e = NotFound()
+    return error_view('404 Not Found', e.description)
 
 
 @app.errorhandler(403)
@@ -278,7 +276,7 @@ def edit_order(order_id):
 
 
 @app.route('/deliveries', methods=['GET'])
-@does_delivery_required
+@is_deliverer_required
 def deliveries():
     netid = get_netid()
 
@@ -293,7 +291,7 @@ def deliveries():
 
 
 @app.route('/orders/claim/<int:order_id>', methods=['POST', 'DELETE'])
-@does_delivery_required
+@is_deliverer_required
 def claim_order(order_id):
     netid = get_netid()
 
@@ -320,7 +318,7 @@ def claim_order(order_id):
 
 
 @app.route('/orders/deliver/<int:order_id>', methods=['POST'])
-@does_delivery_required
+@is_deliverer_required
 def order_delivered(order_id):
     netid = get_netid()
 

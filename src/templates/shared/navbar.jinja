@@ -37,7 +37,7 @@
       <ul class="nav navbar-nav me-auto mb-2 mb-lg-0">
         {% if is_logged_in %}
         {{ _nav_item('orders', 'Orders') }}
-        {% if does_delivery %}
+        {% if is_deliverer %}
         {{ _nav_item('deliveries', 'Deliveries') }}
         {% endif %}
         {% endif %}

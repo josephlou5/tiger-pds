@@ -15,6 +15,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 __all__ = (
     'db',
+    'Deliverer',
     'UserProfile',
     'Order',
 )
@@ -31,6 +32,16 @@ db = SQLAlchemy()
 # ==============================================================================
 
 
+class Deliverer(db.Model):
+    """Model for users who do deliveries."""
+    __tablename__ = 'Deliverers'
+
+    netid = Column(String(), primary_key=True)
+
+    def __init__(self, netid):
+        self.netid = netid
+
+
 class UserProfile(db.Model):
     """Model for a user's profile."""
     __tablename__ = 'UserProfiles'
@@ -40,8 +51,6 @@ class UserProfile(db.Model):
     address = Column(String(), nullable=False)
     # name on packages
     name = Column(String())
-    # whether this person can deliver packages
-    does_delivery = Column(Boolean(), default=False, nullable=False)
 
     def __init__(self, netid, address, name=None):
         self.netid = netid
