@@ -1,4 +1,4 @@
-"""Add Deliverer table
+"""Add Deliverers table
 
 Revision ID: 36a96f29e834
 Revises: f2b8b767218a
