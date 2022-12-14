@@ -1,0 +1,17 @@
+{% extends "shared/layout.jinja" %}
+
+{% block title %}
+Claim Admin
+{% endblock %}
+
+{% block body %}
+<div id="admin-body" class="container-fluid">
+  {% if already_admin %}
+  <h2>Already Admin</h2>
+  <div>You have already been added as an admin.</div>
+  {% else %}
+  <h2>Success</h2>
+  <div>You have successfully been added as an admin.</div>
+  {% endif %}
+</div>
+{% endblock %}

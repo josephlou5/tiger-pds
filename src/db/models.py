@@ -32,6 +32,16 @@ db = SQLAlchemy()
 # ==============================================================================
 
 
+class Admin(db.Model):
+    """Model for a site admin."""
+    __tablename__ = 'Admins'
+
+    netid = Column(String(), primary_key=True)
+
+    def __init__(self, netid):
+        self.netid = netid
+
+
 class Deliverer(db.Model):
     """Model for users who do deliveries."""
     __tablename__ = 'Deliverers'
@@ -103,15 +113,40 @@ class Order(db.Model):
             return self.alias
         return f'Order at Kiosk {self.kiosk}'
 
+    def _date_delivered_fmt(self, fmt_str):
+        dt_utc = UTC_TZ.localize(self.date_delivered)
+        dt_local = dt_utc.astimezone(EASTERN_TZ)
+        return dt_local.strftime(fmt_str)
+
     @property
     def order_status(self):
         if self.is_delivered:
             if self.date_delivered is None:
                 return 'Delivered'
-            dt_local = UTC_TZ.localize(
-                self.date_delivered).astimezone(EASTERN_TZ)
-            date_delivered_str = dt_local.strftime('%a, %b %-d, %Y, %H:%M')
+            date_delivered_str = self._date_delivered_fmt(
+                '%a, %b %-d, %Y, %H:%M')
             return f'Delivered on {date_delivered_str}'
         if self.delivery_netid:
             return 'Picked up from Frist'
         return 'Waiting to be picked up from Frist'
+
+    @property
+    def order_status_admin(self):
+        if self.is_delivered:
+            missing = []
+            delivery_str = 'Delivered'
+            if self.date_delivered is not None:
+                delivery_str += ' at ' + self._date_delivered_fmt(
+                    '%Y-%m-%d %H:%M')
+            else:
+                missing.append('date')
+            if self.delivery_netid is not None:
+                delivery_str += ' by ' + self.delivery_netid
+            else:
+                missing.append('netid')
+            if len(missing) > 0:
+                delivery_str += ' (missing ' + ' and '.join(missing) + ')'
+            return delivery_str
+        if self.delivery_netid:
+            return 'Claimed by ' + self.delivery_netid
+        return 'Unclaimed'

@@ -7,10 +7,19 @@ Helper methods for the Deliverers table.
 
 from werkzeug.exceptions import Forbidden
 
+from db import admin
 from db._shared import query
 from db.models import Deliverer, db
 
 # ==============================================================================
+
+
+def get_all(admin_netid):
+    """Returns all the deliverer netids as a set. `admin_netid` must be
+    an admin.
+    """
+    admin.check(admin_netid)
+    return set(user.netid for user in query(Deliverer).all())
 
 
 def _get(netid):
@@ -30,10 +39,12 @@ def check(netid):
         raise Forbidden('You do not have permission to make deliveries.')
 
 
-def add(netid):
-    """Adds the given netid as a deliverer.
+def add(admin_netid, netid):
+    """Adds the given netid as a deliverer. `admin_netid` must be an
+    admin.
     Returns True if successful.
     """
+    admin.check(admin_netid)
     if is_deliverer(netid):
         return True
     deliverer = Deliverer(netid)
@@ -42,13 +53,15 @@ def add(netid):
     return True
 
 
-def remove(netid):
-    """Removes the given netid as a deliverer.
+def delete(admin_netid, netid):
+    """Deletes the given netid as a deliverer. `admin_netid` must be an
+    admin.
     Returns True if successful.
     """
-    if not is_deliverer(netid):
-        return True
+    admin.check(admin_netid)
     deliverer = _get(netid)
+    if deliverer is None:
+        return True
     db.session.delete(deliverer)
     db.session.commit()
     return True

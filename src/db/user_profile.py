@@ -5,10 +5,19 @@ Helper methods for the UserProfiles table.
 
 # ==============================================================================
 
+from db import admin
 from db._shared import extract_form_data, query
 from db.models import UserProfile, db
 
 # ==============================================================================
+
+
+def get_all(admin_netid):
+    """Returns all the user netids as a set. `admin_netid` must be an
+    admin.
+    """
+    admin.check(admin_netid)
+    return set(user.netid for user in query(UserProfile).all())
 
 
 def get(netid):

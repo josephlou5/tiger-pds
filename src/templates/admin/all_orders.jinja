@@ -1,0 +1,99 @@
+{% extends "shared/layout.jinja" %}
+
+{% block title %}
+All Orders
+{% endblock %}
+
+{% block body %}
+<div id="admin-body" class="container-fluid">
+  <h2>All Orders</h2>
+  <table id="all-orders-table" class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th class="table-small-column">Id</th>
+        <th>Orderer</th>
+        <th>Alias</th>
+        <th>Kiosk</th>
+        <th>PIN</th>
+        <th>Address</th>
+        <th>Name on Package</th>
+        <th>Status</th>
+        <th class="table-small-column"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <th>{{ order.order_id }}</th>
+        <td>{{ order.netid }}</td>
+        <td>
+          {% if order.alias %}
+          {{ order.alias }}
+          {% else %}
+          <span class="text-muted fst-italic">None</span>
+          {% endif %}
+        </td>
+        <td>{{ order.kiosk }}</td>
+        <td>
+          <button
+            index="{{ loop.index0 }}"
+            class="btn btn-sm btn-danger order-pin-number-button"
+          >
+            Show
+          </button>
+          <span
+            index="{{ loop.index0 }}"
+            class="d-none order-pin-number-span"
+          >
+            {{ order.pin }}
+          </span>
+        </td>
+        <td>{{ order.address }}</td>
+        <td>
+          {% if order.name %}
+          {{ order.name }}
+          {% else %}
+          <span class="text-muted fst-italic">None</span>
+          {% endif %}
+        </td>
+        <td>{{ order.order_status_admin }}</td>
+        <td class="table-small-column">
+          <a
+            class="btn btn-sm btn-info"
+            href="{{ url_for('view_order', order_id=order.order_id) }}"
+          >
+            View
+          </a>
+          <button
+            type="button"
+            class="btn btn-sm btn-danger"
+            onclick="deleteOrder({{ order.order_id }});"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const DELETE_URL = '{{ url_for("edit_order", order_id=0)[:-1] }}';
+
+  function deleteOrder(orderId) {
+    ajaxRequest('DELETE', DELETE_URL + orderId);
+  }
+
+  $(document).ready(() => {
+    $('.order-pin-number-button').each(function () {
+      const buttonElement = $(this);
+      const index = buttonElement.attr('index');
+      const pinElement = $(`span.order-pin-number-span[index=${index}]`);
+      // if can't find the pin element, don't do anything
+      if (pinElement.length === 0) return;
+      showHidePinNumber(pinElement, buttonElement);
+    });
+  });
+</script>
+{% endblock %}

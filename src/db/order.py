@@ -9,7 +9,7 @@ from datetime import datetime
 
 from werkzeug.exceptions import Forbidden, NotFound
 
-from db import deliverer
+from db import admin, deliverer
 from db._shared import extract_form_data, query
 from db.models import Order, db
 
@@ -24,9 +24,21 @@ def get(order_id, netid=None, action='view'):
     order = query(Order).filter_by(order_id=order_id).first()
     if order is None:
         raise NotFound(f'Order {order_id} could not be found.')
-    if netid is not None and netid != order.netid:
+    if netid is None:
+        # no need to validate netid
+        pass
+    elif admin.is_admin(netid):
+        # admins can get any order
+        pass
+    elif netid != order.netid:
         raise Forbidden(f'You do not have permission to {action} this order.')
     return order
+
+
+def get_all_orders(netid):
+    """Returns all the orders. The netid must be an admin."""
+    admin.check(netid)
+    return query(Order).all()
 
 
 def get_all(netid):

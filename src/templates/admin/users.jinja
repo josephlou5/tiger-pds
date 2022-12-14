@@ -1,0 +1,131 @@
+{% extends "shared/layout.jinja" %}
+{% import "shared/forms.jinja" as forms %}
+
+{% block title %}
+Users
+{% endblock %}
+
+{% macro make_toggle(index, resource, value) %}
+<button
+  type="button"
+  class="btn btn-sm btn-{{ 'success' if value else 'danger'}} toggle-button"
+  index="{{ index }}"
+  resource="{{ resource }}"
+>
+  {{ value }}
+</button>
+{% endmacro %}
+
+{% block body %}
+<div id="admin-body" class="container-fluid">
+  <h2>Users</h2>
+  {% if user_roles|length == 0 %}
+  {# probably won't happen, since seeing this page means you're an admin #}
+  <div>No users.</div>
+  {% else %}
+  <table
+    id="users-table"
+    class="table table-striped table-hover"
+    nextIndex="{{ user_roles|length }}"
+  >
+    <thead>
+      <tr>
+        <th class="table-small-column"></th>
+        <th>NetID</th>
+        <th>Is Admin</th>
+        <th>Does Delivery</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for roles in user_roles %}
+      {% set admin_checkbox_id = 'is-admin-checkbox-' + loop.index0|string %}
+      {% set deliverer_checkbox_id =
+           'is-deliverer-checkbox-' + loop.index0|string
+      %}
+      <tr netid="{{ roles['netid'] }}">
+        <th>{{ loop.index }}</th>
+        <td class="netid" index="{{ loop.index0 }}">
+          {{ roles['netid'] }}
+        </td>
+        <td>
+          {{ make_toggle(loop.index0, 'admin', roles['is_admin']) }}
+        </td>
+        <td>
+          {{ make_toggle(loop.index0, 'deliverer', roles['is_deliverer']) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+<script>
+  const ADMIN_URL = '{{ url_for("edit_admin", netid="") }}';
+  const DELIVERER_URL = '{{ url_for("edit_deliverer", netid="") }}';
+
+  function removeAdmin(netid) {
+    ajaxRequest('DELETE', ADMIN_URL + netid, {
+      success: (res) => {
+        if (res.responseText === 'true') {
+          location.reload();
+        } else {
+          // no longer an admin
+          location.assign('{{ url_for("index") }}');
+        }
+      },
+    });
+  }
+
+  function addAdmin(netid) {
+    ajaxRequest('POST', ADMIN_URL + netid);
+  }
+
+  function removeDeliverer(netid) {
+    ajaxRequest('DELETE', DELIVERER_URL + netid);
+  }
+
+  function addDeliverer(netid) {
+    ajaxRequest('POST', DELIVERER_URL + netid);
+  }
+
+  $(document).ready(() => {
+    const functions = {
+      admin: {
+        add: addAdmin,
+        remove: removeAdmin,
+      },
+      deliverer: {
+        add: addDeliverer,
+        remove: removeDeliverer,
+      },
+    };
+
+    $('.toggle-button').click(function () {
+      const button = $(this);
+      const index = button.attr('index').trim();
+      const resource = button.attr('resource').trim();
+
+      const netidElement = $(`td.netid[index=${index}]`);
+      if (netidElement == null) {
+        console.log(`Clicked button ${index}, but no associated netid found`);
+        return;
+      }
+      const netid = netidElement.html().trim();
+
+      if (button.html().trim() === 'False') {
+        // add them
+        functions[resource].add(netid);
+      } else {
+        // remove them
+        if (resource === 'admin' && netid == '{{ netid }}') {
+          // removing yourself as an admin
+          if (!confirm('Are you sure you want to remove yourself as an admin?'))
+            return;
+        }
+        functions[resource].remove(netid);
+      }
+    });
+  });
+</script>
+{% endblock %}

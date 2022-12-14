@@ -48,12 +48,16 @@ def is_logged_in():
 
 @app.context_processor
 def inject_logged_in_user():
+    is_admin = False
     is_deliverer = False
     if is_logged_in():
-        is_deliverer = db.deliverer.is_deliverer(get_netid())
+        netid = get_netid()
+        is_admin = db.admin.is_admin(netid)
+        is_deliverer = db.deliverer.is_deliverer(netid)
     return {
         'is_logged_in': is_logged_in(),
         'netid': get_netid(),
+        'is_admin': is_admin,
         'is_deliverer': is_deliverer,
     }
 
@@ -78,8 +82,20 @@ def login_required(func):
     return wrapper
 
 
+def is_admin_required(func):
+    """A decorator to protect an endpoint for admins."""
+
+    @functools.wraps(func)
+    @login_required
+    def wrapper(*args, **kwargs):
+        db.admin.check(get_netid())
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 def is_deliverer_required(func):
-    """A decorator to protect an endpoint with users who are authorized
+    """A decorator to protect an endpoint for users who are authorized
     to make deliveries.
     """
 
@@ -173,6 +189,68 @@ def profile():
         'endpoint': url_for('profile'),
     }
     return _render('profile/profile.jinja', **render_kwargs)
+
+
+# ==============================================================================
+
+
+@app.route('/admin/claim/<netid>', methods=['GET'])
+@login_required
+def claim_admin(netid):
+    """This endpoint allows a user to claim the first admin role of the
+    site. If there are no existing admins, this user will become the
+    first admin. Otherwise, the endpoint is shown as "not found".
+    """
+    logged_in_netid = get_netid()
+    if netid != logged_in_netid:
+        raise NotFound()
+    already_admin = False
+    admins = db.admin.get_all()
+    if netid in admins:
+        # if already an admin
+        already_admin = True
+    elif len(admins) > 1:
+        raise NotFound()
+    else:
+        db.admin.add_first(netid)
+    return _render('admin/claim_admin.jinja', already_admin=already_admin)
+
+
+@app.route('/admin/all_orders', methods=['GET'])
+@is_admin_required
+def admin_all_orders():
+    all_orders = db.order.get_all_orders(get_netid())
+    return _render('admin/all_orders.jinja', orders=all_orders)
+
+
+@app.route('/admin/users', methods=['GET'])
+@is_admin_required
+def admin_users():
+    user_roles = db.admin.get_all_users(get_netid())
+    return _render('admin/users.jinja', user_roles=user_roles)
+
+
+@app.route('/admin/set/<netid>', methods=['POST', 'DELETE'])
+@is_admin_required
+def edit_admin(netid):
+    admin_netid = get_netid()
+    if request.method == 'POST':
+        db.admin.add(admin_netid, netid)
+    elif request.method == 'DELETE':
+        db.admin.delete(admin_netid, netid)
+    # returns true if the logged in user is still an admin
+    return make_response('true' if db.admin.is_admin(get_netid()) else 'false')
+
+
+@app.route('/user/deliverer/set/<netid>', methods=['POST', 'DELETE'])
+@is_admin_required
+def edit_deliverer(netid):
+    admin_netid = get_netid()
+    if request.method == 'POST':
+        db.deliverer.add(admin_netid, netid)
+    elif request.method == 'DELETE':
+        db.deliverer.delete(admin_netid, netid)
+    return make_response('success')
 
 
 # ==============================================================================
