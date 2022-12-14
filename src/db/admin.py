@@ -7,7 +7,7 @@ Helper methods for the Admins table.
 
 from werkzeug.exceptions import BadRequest, Forbidden
 
-from db import deliverer, user_profile
+from db import deliverer, user
 from db._shared import query
 from db.models import Admin, db
 
@@ -22,6 +22,8 @@ def get_all():
 def get_all_users(admin_netid):
     """Returns all the users, along with their permissions, as a list of
     dicts. `admin_netid` must be an admin.
+
+    Returns the users in order of admin, deliverers, and regular users.
     """
     check(admin_netid)
 
@@ -33,17 +35,17 @@ def get_all_users(admin_netid):
         }
 
     users = {}
-    for user in user_profile.get_all(admin_netid):
-        if user not in users:
-            users[user] = _make(user)
-    for user in get_all():
-        if user not in users:
-            users[user] = _make(user)
-        users[user]['is_admin'] = True
-    for user in deliverer.get_all(admin_netid):
-        if user not in users:
-            users[user] = _make(user)
-        users[user]['is_deliverer'] = True
+    for netid in get_all():
+        if netid not in users:
+            users[netid] = _make(netid)
+        users[netid]['is_admin'] = True
+    for netid in deliverer.get_all(admin_netid):
+        if netid not in users:
+            users[netid] = _make(netid)
+        users[netid]['is_deliverer'] = True
+    for netid in user.get_all(admin_netid):
+        if netid not in users:
+            users[netid] = _make(netid)
     return list(users.values())
 
 

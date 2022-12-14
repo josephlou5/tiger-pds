@@ -58,11 +58,32 @@ Users
     </tbody>
   </table>
   {% endif %}
+  <div class="row">
+    {# could turn this into a form for server-side validation #}
+    <div class="col-auto">
+      <label for="add-user-input" class="col-form-label">Add User</label>
+    </div>
+    <div class="col-auto">
+      <input
+        type="text"
+        id="add-user-input"
+        class="form-control"
+        placeholder="NetID"
+      />
+      <div id="add-user-error" class="invalid-feedback"></div>
+    </div>
+    <div class="col-auto">
+      <button type="button" id="add-user-button" class="btn btn-success">
+        Add
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
   const ADMIN_URL = '{{ url_for("edit_admin", netid="") }}';
   const DELIVERER_URL = '{{ url_for("edit_deliverer", netid="") }}';
+  const ADD_USER_URL = '{{ url_for("add_user", netid="") }}';
 
   function removeAdmin(netid) {
     ajaxRequest('DELETE', ADMIN_URL + netid, {
@@ -87,6 +108,48 @@ Users
 
   function addDeliverer(netid) {
     ajaxRequest('POST', DELIVERER_URL + netid);
+  }
+
+  function clearAddUserError(addUserInput, addUserError) {
+    addUserInput.removeClass('is-invalid');
+    addUserError.html('');
+  }
+
+  function setAddUserError(addUserInput, addUserError, msg) {
+    addUserError.html(msg);
+    addUserInput.addClass('is-invalid');
+  }
+
+  function handleAddUserButtonClick() {
+    const addInput = $('#add-user-input');
+    const errorDiv = $('#add-user-error');
+
+    // Clear errors
+    clearAddUserError(addInput, errorDiv);
+
+    const netid = addInput.val().trim();
+    if (netid === '') {
+      setAddUserError(addInput, errorDiv, 'Please provide a netID.');
+      return;
+    }
+
+    // some very basic checking for valid netids
+    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(netid)) {
+      setAddUserError(addInput, errorDiv, 'Invalid netID.');
+      return;
+    }
+
+    if ($(`[netid=${netid}]`).length > 0) {
+      setAddUserError(
+        addInput,
+        errorDiv,
+        'This user already exists in the table.'
+      );
+      return;
+    }
+
+    // add user, then refresh page to update table
+    ajaxRequest('POST', ADD_USER_URL + netid);
   }
 
   $(document).ready(() => {
@@ -126,6 +189,20 @@ Users
         functions[resource].remove(netid);
       }
     });
+
+    $('#add-user-input').keydown(function (event) {
+      if (event.which === 13) {
+        // enter key pressed; simulate button press
+        handleAddUserButtonClick();
+        return;
+      }
+
+      const addInput = $(this);
+      const errorDiv = $('#add-user-error');
+      clearAddUserError(addInput, errorDiv);
+    });
+
+    $('#add-user-button').click(handleAddUserButtonClick);
   });
 </script>
 {% endblock %}

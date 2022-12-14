@@ -16,7 +16,7 @@ from sqlalchemy import Boolean, Column, DateTime, Integer, String
 __all__ = (
     'db',
     'Deliverer',
-    'UserProfile',
+    'User',
     'Order',
 )
 
@@ -52,17 +52,17 @@ class Deliverer(db.Model):
         self.netid = netid
 
 
-class UserProfile(db.Model):
-    """Model for a user's profile."""
-    __tablename__ = 'UserProfiles'
+class User(db.Model):
+    """Model for a user."""
+    __tablename__ = 'Users'
 
     netid = Column(String(), primary_key=True)
     # dorm room
-    address = Column(String(), nullable=False)
+    address = Column(String())
     # name on packages
     name = Column(String())
 
-    def __init__(self, netid, address, name=None):
+    def __init__(self, netid, address=None, name=None):
         self.netid = netid
         self.address = address
         self.name = name

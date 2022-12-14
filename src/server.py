@@ -176,12 +176,12 @@ def index():
 @login_required
 def profile():
     netid = get_netid()
-    user_profile = db.user_profile.get(netid)
+    user_profile = db.user.get(netid)
 
     edit_profile_form = forms.EditProfileForm(obj=user_profile)
 
     if edit_profile_form.validate_on_submit():
-        db.user_profile.save(netid, edit_profile_form)
+        db.user.save(netid, edit_profile_form)
 
     render_kwargs = {
         'profile': user_profile,
@@ -209,7 +209,7 @@ def claim_admin(netid):
     if netid in admins:
         # if already an admin
         already_admin = True
-    elif len(admins) > 1:
+    elif len(admins) > 0:
         raise NotFound()
     else:
         db.admin.add_first(netid)
@@ -240,6 +240,13 @@ def edit_admin(netid):
         db.admin.delete(admin_netid, netid)
     # returns true if the logged in user is still an admin
     return make_response('true' if db.admin.is_admin(get_netid()) else 'false')
+
+
+@app.route('/user/add/<netid>', methods=['POST'])
+@is_admin_required
+def add_user(netid):
+    db.user.add(get_netid(), netid)
+    return make_response('success')
 
 
 @app.route('/user/deliverer/set/<netid>', methods=['POST', 'DELETE'])
@@ -287,7 +294,7 @@ def view_order(order_id):
 def create_order():
     netid = get_netid()
 
-    user_profile = db.user_profile.get(netid)
+    user_profile = db.user.get(netid)
     create_order_form = forms.EditOrderForm(obj=None)
     del create_order_form.delete
 
