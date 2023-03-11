@@ -10,5 +10,7 @@ University in Fall 2022.
 
 ## Deployment
 
-This app has been deployed through [Render](https://render.com) at
-https://tiger-pds.onrender.com.
+~~This app has been deployed through [Render](https://render.com) at
+https://tiger-pds.onrender.com.~~
+
+As of March 11, 2023, the deployment server is no longer active.
